@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitScope — GitHub Profile Analyzer</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔭</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eceee8;--panel:#f8f9f5;--ink:#1a2a2e;--mute:#5d6d70;--line:#cfd5cc;--acc:#2b45e6;--acc2:#e9a917;--err:#b3261e;
+--display:'Bricolage Grotesque','Trebuchet MS',sans-serif;--body:'Instrument Sans','Segoe UI',system-ui,sans-serif}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#111b1e;--panel:#182427;--ink:#e8ede6;--mute:#93a4a6;--line:#2b3b3f;--acc:#7f92ff;--acc2:#f2bd3d;--err:#ff8a80}}
+:root[data-theme=dark]{--bg:#111b1e;--panel:#182427;--ink:#e8ede6;--mute:#93a4a6;--line:#2b3b3f;--acc:#7f92ff;--acc2:#f2bd3d;--err:#ff8a80}
+*{box-sizing:border-box;margin:0}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--body);min-height:100vh}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.wrap{position:relative;z-index:1;max-width:1040px;margin:0 auto;padding:28px 20px 64px;text-align:center}
+.wrap .card,.wrap .hero,.wrap .repo,.wrap .err{text-align:left}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:36px}
+.brand{font:800 22px var(--display);letter-spacing:-.02em}
+.tt{background:none;border:1px solid var(--line);color:var(--ink);border-radius:99px;padding:6px 14px;cursor:pointer;font:500 14px var(--body)}
+h1{margin:0 auto;font:800 clamp(2.2rem,6vw,4rem)/1.02 var(--display);letter-spacing:-.035em;max-width:14ch}
+.lede{color:var(--mute);margin:14px auto 26px;max-width:52ch}
+form{display:flex;gap:10px;flex-wrap:wrap;max-width:560px;margin:0 auto}
+input,select{font:inherit;color:var(--ink);background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px}
+input:focus,select:focus{border-color:var(--acc)}
+#user{flex:1;min-width:200px}
+.btn{background:var(--ink);color:var(--bg);border:0;border-radius:10px;padding:12px 22px;font:600 16px var(--body);cursor:pointer}
+.btn:disabled{opacity:.5;cursor:wait}
+#out{margin-top:44px}
+.err{margin:0 auto;border-left:5px solid var(--err);background:var(--panel);padding:16px 18px;border-radius:6px;max-width:640px}
+.err b{display:block;color:var(--err);margin-bottom:2px}
+.skel{height:180px;border-radius:14px;background:linear-gradient(90deg,var(--panel),var(--line),var(--panel));background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.hero{display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px}
+.hero img{width:132px;height:132px;border-radius:50%;border:4px solid var(--acc2);object-fit:cover}
+.hero h2{font:800 2rem/1.1 var(--display);letter-spacing:-.02em}
+.hero .h{color:var(--mute)}
+.hero p{margin-top:8px;max-width:60ch}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--mute);font-size:14px;margin-top:10px}
+.hero a.v{color:var(--acc);font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin:14px 0}
+.stat{padding:14px 16px;border-bottom:3px solid var(--acc2);background:var(--panel)}
+.stat strong{display:block;font:800 1.9rem/1.1 var(--display)}
+.stat span{color:var(--mute);font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;margin-top:14px}
+.card h3{font:700 1.25rem var(--display);margin-bottom:4px}
+.sub{color:var(--mute);font-size:14px;margin-bottom:16px}
+.mix{display:flex;height:64px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.mix div{min-width:4px;transition:flex-grow .6s}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:14px;font-size:14px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.dna{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.dna .t{font:800 1.6rem var(--display);color:var(--acc)}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.tools input{flex:1;min-width:180px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.repo{display:block;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--bg);transition:border-color .15s}
+.repo:hover{border-color:var(--acc)}
+.repo h4{font:700 1.05rem var(--display);word-break:break-word}
+.repo p{color:var(--mute);font-size:14px;margin:6px 0 10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.repo .f{display:flex;gap:14px;font-size:13px;color:var(--mute);flex-wrap:wrap}
+.empty{color:var(--mute);padding:24px 0}
+@media(max-width:560px){.hero{grid-template-columns:1fr}.hero img{width:96px;height:96px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<script type="text/babel">
+const {useState,useEffect,useRef,useMemo}=React;
+const API='https://api.github.com';
+const COLORS=['#2b45e6','#e9a917','#1f9d8a','#d1495b','#8a5cf5','#5b8c2a','#e07a3f','#3a7bd5','#a3a3a3'];
+const num=n=>n>=1000?(n/1000).toFixed(n>=10000?0:1)+'k':String(n);
+
+async function gh(path){
+  let r;
+  try{r=await fetch(API+path,{headers:{Accept:'application/vnd.github+json'}})}
+  catch{throw{t:"Can't reach GitHub",m:'Check your internet connection and try again.'}}
+  if(r.status===404)throw{t:'User not found',m:'No GitHub account matches that username. Check the spelling and try again.'};
+  if(r.status===403||r.status===429){
+    const reset=r.headers.get('x-ratelimit-reset');
+    const mins=reset?Math.max(1,Math.ceil((reset*1000-Date.now())/60000)):null;
+    throw{t:'GitHub rate limit reached',m:'Unauthenticated requests are limited per hour.'+(mins?` Try again in about ${mins} minute${mins>1?'s':''}.`:'')};
+  }
+  if(!r.ok)throw{t:'GitHub returned an error',m:`Status ${r.status}. Try again shortly.`};
+  return r.json();
+}
+
+function archetype(u,stars,top,repos){
+  const l=top[0]?.[0];
+  if(!repos.length)return['Newcomer','No public repositories yet. Their story starts with a first commit.'];
+  if(u.followers>1000&&stars>1000)return['Community builder','Widely followed with heavily starred projects.'];
+  if(stars>200)return['Star maker','Their projects attract attention from other developers.'];
+  if(top.length>=6)return['Polyglot','Comfortable across '+top.length+' languages.'];
+  if(repos.filter(r=>!r.fork).length<repos.length/2)return['Contributor',"Most repositories are forks, so they build on others' work."];
+  return[l?l+' specialist':'Builder',`Most of their public work is in ${l||'a mix of tools'}.`];
+}
+
+/* Interactive background: layered waves that swell toward the cursor */
+function Background(){
+  const ref=useRef(null);
+  useEffect(()=>{
+    const c=ref.current,x=c.getContext('2d');
+    const still=matchMedia('(prefers-reduced-motion:reduce)').matches;
+    let W,H,dpr,t=0,raf,m={x:-999,y:-999,tx:-999,ty:-999};
+    const size=()=>{dpr=devicePixelRatio||1;W=c.width=innerWidth*dpr;H=c.height=innerHeight*dpr};
+    const move=e=>{m.tx=e.clientX*dpr;m.ty=e.clientY*dpr};
+    const leave=()=>{m.tx=m.ty=-999};
+    size();
+    addEventListener('resize',size);addEventListener('pointermove',move);addEventListener('pointerleave',leave);
+    const frame=()=>{
+      m.x+=(m.tx-m.x)*.08;m.y+=(m.ty-m.y)*.08;t+=still?0:.006;
+      x.clearRect(0,0,W,H);
+      for(let i=0;i<COLORS.length-1;i++){
+        const base=H*(.15+i*.13),amp=H*.03+i*4*dpr;
+        x.beginPath();x.moveTo(0,H);
+        for(let px=0;px<=W;px+=16*dpr){
+          let y=base+Math.sin(px/(W*.13)+t*(1+i*.15)+i)*amp+Math.sin(px/(W*.05)-t*1.3)*amp*.3;
+          const d=Math.hypot(px-m.x,y-m.y),r=260*dpr;
+          if(d<r)y-=Math.cos(d/r*Math.PI/2)**2*70*dpr;
+          x.lineTo(px,y);
+        }
+        x.lineTo(W,H);x.closePath();
+        x.globalAlpha=.16;x.fillStyle=COLORS[i];x.fill();
+        x.globalAlpha=.35;x.lineWidth=1.5*dpr;x.strokeStyle=COLORS[i];x.stroke();
+      }
+      x.globalAlpha=1;
+      if(!still)raf=requestAnimationFrame(frame);
+    };
+    frame();
+    return()=>{cancelAnimationFrame(raf);removeEventListener('resize',size);removeEventListener('pointermove',move);removeEventListener('pointerleave',leave)};
+  },[]);
+  return <canvas id="bg" ref={ref} aria-hidden="true"/>;
+}
+
+function Profile({u,repos,stars,forks}){
+  return(<>
+    <section className="hero">
+      <img src={u.avatar_url} alt={`Avatar of ${u.login}`}/>
+      <div>
+        <h2>{u.name||u.login}</h2>
+        <div className="h">@{u.login}</div>
+        <p>{u.bio||<span style={{color:'var(--mute)'}}>This user hasn't added a bio.</span>}</p>
+        <div className="meta">
+          {u.location&&<span>{u.location}</span>}
+          {u.company&&<span>{u.company}</span>}
+          <span>On GitHub since {new Date(u.created_at).getFullYear()}</span>
+          <a className="v" href={u.html_url} target="_blank" rel="noopener noreferrer">View on GitHub</a>
+        </div>
+      </div>
+    </section>
+    <div className="stats">
+      {[[u.followers,'Followers'],[u.following,'Following'],[u.public_repos,'Public repos'],[stars,'Stars earned'],[forks,'Forks received']].map(([n,l])=>
+        <div className="stat" key={l}><strong>{num(n)}</strong><span>{l}</span></div>)}
+    </div>
+  </>);
+}
+
+function Languages({top,total,colors}){
+  return(
+    <section className="card">
+      <h3>Language mix</h3>
+      <p className="sub">Each color is a language, sized by how many repositories use it as their main one.</p>
+      {top.length?<>
+        <div className="mix" role="img" aria-label="Language breakdown">
+          {top.map(([l,n])=><div key={l} title={`${l}: ${n}`} style={{flexGrow:n,background:colors[l]}}/>)}
+        </div>
+        <div className="legend">
+          {top.map(([l,n])=><span key={l}><i style={{background:colors[l]}}/>{l} {Math.round(n/total*100)}%</span>)}
+        </div>
+      </>:<p className="empty">No language data available for these repositories.</p>}
+    </section>
+  );
+}
+
+function RepoList({repos,colors}){
+  const [q,setQ]=useState(''),[lang,setLang]=useState(''),[sort,setSort]=useState('stars');
+  const langs=useMemo(()=>[...new Set(repos.map(r=>r.language).filter(Boolean))].sort(),[repos]);
+  const shown=useMemo(()=>{
+    const s=q.toLowerCase();
+    const r=repos.filter(x=>(!lang||x.language===lang)&&(!s||x.name.toLowerCase().includes(s)||(x.description||'').toLowerCase().includes(s)));
+    return r.sort(sort==='stars'?(a,b)=>b.stargazers_count-a.stargazers_count:sort==='name'?(a,b)=>a.name.localeCompare(b.name):(a,b)=>new Date(b.pushed_at)-new Date(a.pushed_at));
+  },[repos,q,lang,sort]);
+  return(
+    <section className="card">
+      <h3>Repositories</h3>
+      <p className="sub">Showing {shown.length} of {repos.length} repositories</p>
+      <div className="tools">
+        <input type="search" value={q} onChange={e=>setQ(e.target.value)} placeholder="Search by name or description" aria-label="Search repositories"/>
+        <select value={lang} onChange={e=>setLang(e.target.value)} aria-label="Filter by language">
+          <option value="">All languages</option>{langs.map(l=><option key={l}>{l}</option>)}
+        </select>
+        <select value={sort} onChange={e=>setSort(e.target.value)} aria-label="Sort repositories">
+          <option value="stars">Most stars</option><option value="updated">Recently updated</option><option value="name">Name A–Z</option>
+        </select>
+      </div>
+      {shown.length?<div className="grid">
+        {shown.map(x=>
+          <a className="repo" key={x.id} href={x.html_url} target="_blank" rel="noopener noreferrer">
+            <h4>{x.name}</h4>
+            <p>{x.description||'No description provided.'}</p>
+            <div className="f">
+              <span>★ {num(x.stargazers_count)}</span><span>Forks {num(x.forks_count)}</span>
+              {x.language&&<span><i style={{display:'inline-block',width:9,height:9,borderRadius:'50%',background:colors[x.language]||'#a3a3a3',marginRight:5}}/>{x.language}</span>}
+            </div>
+          </a>)}
+      </div>:<p className="empty">No repositories match. Clear the search or pick another language.</p>}
+    </section>
+  );
+}
+
+function Results({u,repos}){
+  const stars=repos.reduce((a,r)=>a+r.stargazers_count,0),forks=repos.reduce((a,r)=>a+r.forks_count,0);
+  const {top,total,colors}=useMemo(()=>{
+    const c={};repos.forEach(r=>{if(r.language)c[r.language]=(c[r.language]||0)+1});
+    const total=Object.values(c).reduce((a,b)=>a+b,0)||1;
+    const list=Object.entries(c).sort((a,b)=>b[1]-a[1]);
+    const top=list.slice(0,8),rest=list.slice(8).reduce((a,[,n])=>a+n,0);
+    if(rest)top.push(['Other',rest]);
+    const colors={};top.forEach(([l],i)=>colors[l]=COLORS[i]);
+    return{top,total,colors};
+  },[repos]);
+  const [type,desc]=archetype(u,stars,top,repos);
+  return(<>
+    <Profile u={u} repos={repos} stars={stars} forks={forks}/>
+    <Languages top={top} total={total} colors={colors}/>
+    <section className="card"><div className="dna">
+      <div><h3>Developer type</h3><div className="t">{type}</div></div>
+      <p style={{flex:1,minWidth:220,alignSelf:'center',color:'var(--mute)'}}>{desc}</p>
+    </div></section>
+    <RepoList repos={repos} colors={colors}/>
+  </>);
+}
+
+function App(){
+  const [name,setName]=useState('');
+  const [state,setState]=useState({status:'idle'});
+  const [theme,setTheme]=useState(null);
+  useEffect(()=>{if(theme)document.documentElement.dataset.theme=theme},[theme]);
+  const toggle=()=>setTheme((theme||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'))==='dark'?'light':'dark');
+
+  async function run(e){
+    e.preventDefault();
+    const n=name.trim();
+    if(!n)return setState({status:'error',t:'Enter a username',m:'Type a GitHub username above to begin.'});
+    if(!/^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i.test(n))
+      return setState({status:'error',t:'Invalid username',m:'GitHub usernames use letters, numbers and single hyphens, up to 39 characters.'});
+    setState({status:'loading'});
+    try{
+      const u=await gh('/users/'+encodeURIComponent(n));
+      const pages=Math.min(3,Math.ceil(u.public_repos/100)||0);
+      const lists=await Promise.all(Array.from({length:pages},(_,i)=>gh(`/users/${encodeURIComponent(n)}/repos?per_page=100&sort=updated&page=${i+1}`)));
+      setState({status:'done',u,repos:lists.flat()});
+    }catch(err){setState({status:'error',t:err.t||'Something went wrong',m:err.m||'Please try again.'})}
+  }
+
+  return(<>
+    <Background/>
+    <div className="wrap">
+      <header><div className="brand">GitScope</div><button className="tt" type="button" onClick={toggle}>Switch theme</button></header>
+      <h1>Read a developer's work in layers.</h1>
+      <p className="lede">Enter a GitHub username to see their profile, how their languages stack up, and every public repository you can search and sort.</p>
+      <form onSubmit={run} noValidate>
+        <input id="user" type="text" value={name} onChange={e=>setName(e.target.value)} placeholder="GitHub username, e.g. torvalds" aria-label="GitHub username" autoComplete="off" spellCheck="false"/>
+        <button className="btn" type="submit" disabled={state.status==='loading'}>Analyze profile</button>
+      </form>
+      <div id="out" aria-live="polite">
+        {state.status==='loading'&&<><div className="skel"/><div className="skel" style={{marginTop:14,height:120}}/></>}
+        {state.status==='error'&&<div className="err" role="alert"><b>{state.t}</b>{state.m}</div>}
+        {state.status==='done'&&<Results u={state.u} repos={state.repos}/>}
+      </div>
+    </div>
+  </>);
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
